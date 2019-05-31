@@ -3,14 +3,16 @@ import * as webpack from 'webpack'
 
 import { IBuildConfig } from './utils/types'
 import { printBuildError, bindProdLogger } from './utils/logHelper'
-import MiniPlugin from './plugins/miniPlugin'
+import MiniPlugin, { Targets } from './plugins/MiniPlugin'
+
+const extensions = ['.ts', '.tsx', '.js', '.jsx']
 
 export default function build (config: IBuildConfig) {
   const compilePlugins = config.plugins
   const { babel } = compilePlugins
   const webpackConfig = {
     mode: config.isWatch ? 'development' : 'production',
-    devtool: "inline-source-map",
+    devtool: false,
     entry: config.entry,
     output: {
       filename: '[name].js',
@@ -18,7 +20,17 @@ export default function build (config: IBuildConfig) {
 			path: config.outputDir,
     },
     resolve: {
-      extensions: ['.ts', '.tsx', '.js', '.jsx']
+      extensions
+    },
+    target: Targets[config.buildAdapter],
+    optimization: {
+      runtimeChunk: {
+        name: 'runtime'
+      },
+      splitChunks: {
+        chunks: 'all',
+        name: 'vendors'
+      }
     },
     module: {
       rules: [
